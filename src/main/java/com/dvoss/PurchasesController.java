@@ -1,6 +1,8 @@
 package com.dvoss;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,16 +50,24 @@ public class PurchasesController {
     }
 
     @RequestMapping(path = "/", method = RequestMethod.GET)
-    public String home(Model model, String category) {
-        Iterable<Purchase> p;
+    public String home(Model model, String category, Integer page) {
+        page = (page == null) ? 0 : page; // single-line conditional: sets page as 0 if null, otherwise as page number
+        PageRequest pr = new PageRequest(page, 10);
+        Page<Purchase> p;
         if (category != null) {
-            p = purchases.findByCategory(category);
-            model.addAttribute("purchases", p);
+            p = purchases.findByCategory(pr, category);
         }
         else {
-            p = purchases.findAll();
-            model.addAttribute("purchases", p);
+            p = purchases.findAll(pr);
+
         }
+        model.addAttribute("purchases", p);
+        model.addAttribute("category", category);
+        model.addAttribute("nextPage", page + 1);
+        model.addAttribute("showNext", p.hasNext());
+        model.addAttribute("prevPage", page - 1);
+        model.addAttribute("showPrev", p.hasPrevious());
+
         return "home";
     }
 }
